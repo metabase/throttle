@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/math.numeric-tower "0.0.4"
                   :exclusions [org.clojure/clojure]]]
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]
-                                  [expectations "2.1.3"]]
+                                  [expectations "2.1.4"]]
                    :plugins [[lein-expectations "0.0.8"]
                              [jonase/eastwood "0.2.3"]
                              [lein-bikeshed "0.3.0"]]
