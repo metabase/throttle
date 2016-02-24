@@ -24,7 +24,7 @@ Every time there's a login attempt, push a new pair of `[email timestamp-millise
 The list is thus automatically ordered by date, and we can drop the portion of the list with logins that are over
 an hour old as needed.
 
-Once a User has reached some number of login attempts over the past hour (e.g. 5), calculate some delay before
+Once a user has reached some number of login attempts over the past hour (e.g. 5), calculate some delay before
 they're allowed to try to log in again (e.g., 15 seconds). This number will increase exponentially as the number of
 recent failures increases (e.g., 40 seconds for 6 failed attempts, 90 for 7 failed attempts, etc).
 
