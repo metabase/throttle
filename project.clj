@@ -13,4 +13,5 @@
                              [lein-bikeshed "0.3.0"]]
                    :eastwood {:add-linters [:unused-private-vars]}
                    :aliases {"bikeshed" ["with-profile" "+bikeshed" "bikeshed" "--max-line-length" "160"]
-                             "test" ["expectations"]}}})
+                             "test" ["expectations"]}}}
+  :deploy-repositories [["clojars" {:sign-releases false}]])
