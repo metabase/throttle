@@ -27,7 +27,7 @@ Once we've passed some number of login attempts over the past hour (e.g. 5) for 
 they're allowed to try to log in again (e.g., 15 seconds). This number will increase exponentially as the number of
 recent failures increases (e.g., 40 seconds for 6 failed attempts, 90 for 7 failed attempts, etc).
 
-If applicable, calucate the time since the last failed attempt, and throw an exception telling the user the number
+If applicable, calculate the time since the last failed attempt, and throw an exception telling the user the number
 of seconds they must wait before trying again.
 
 ### Usage
