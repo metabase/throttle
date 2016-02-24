@@ -13,10 +13,10 @@ Let's consider a login endpoint that we want to make sure isn't vulnerable to a 
 The basic concept here is to keep a list of logins attempts over the last hour. This list looks like:
 
 ```clojure
-(["cam@metabase.com" 1438045261132] ; Unix timestamps (milliseconds)
+[["cam@metabase.com" 1438045261132] ; Unix timestamps (milliseconds)
  ["cam@metabase.com" 1438045260450]
  ["cam@metabase.com" 1438045259037]
- ["cam@metabase.com" 1438045258204])
+ ["cam@metabase.com" 1438045258204]]
 ```
 
 Every time there's a login attempt, push a new pair of `[email timestamp-milliseconds]` to the front of the list.
