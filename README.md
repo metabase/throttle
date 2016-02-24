@@ -39,7 +39,7 @@ Define a new throttler with `make-throttler`, overriding default settings as nee
 (def email-throttler (throttle/make-throttler :email, :attempts-threshold 10))
 ```
 
-Then call `check` within the body of an endpoint with some value to apply throttling.
+Then call `check` at the appropriate point in your code with some value to apply throttling.
 
 ```clojure
 (defn my-endpoint-fn [:as {{:keys [email]} :body}]
