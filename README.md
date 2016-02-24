@@ -1,6 +1,6 @@
 # Throttling
 
-[![Clojars Project](https://clojars.org/metabase-throttle/latest-version.svg)](http://clojars.org/metabase-throttle)
+[![Clojars Project](https://clojars.org/metabase/throttle/latest-version.svg)](http://clojars.org/metabase/throttle)
 
 [![Dependencies Status](http://jarkeeper.com/metabase/throttle/status.png)](http://jarkeeper.com/metabase/throttle) [![Circle CI](https://circleci.com/gh/metabase/throttle.svg?style=svg)](https://circleci.com/gh/metabase/throttle)
 
