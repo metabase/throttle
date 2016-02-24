@@ -1,11 +1,11 @@
-(ns metabase.throttle-test
+(ns throttle.core-test
   (:require [expectations :refer :all]
-            [metabase.throttle :as throttle]))
+            [throttle.core :as throttle]))
 
 (def ^:private test-throttler (throttle/make-throttler :test, :initial-delay-ms 5, :attempts-threshold 3, :delay-exponent 2, :attempt-ttl-ms 25))
 
 ;;; # tests for calculate-delay
-(def calculate-delay @(resolve 'metabase.throttle/calculate-delay))
+(def calculate-delay @(resolve 'throttle.core/calculate-delay))
 
 ;; no delay should be calculated for the 3rd attempt
 (expect nil

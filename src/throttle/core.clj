@@ -1,11 +1,10 @@
-(ns metabase.throttle
+(ns throttle.core
   (:require [clojure.math.numeric-tower :as math])
   (:import (clojure.lang Atom Keyword)))
 
 ;;; # PUBLIC INTERFACE
 
-(declare calculate-delay
-         remove-old-attempts)
+(declare calculate-delay remove-old-attempts)
 
 (defrecord Throttler [;; Name of the API field/value being checked. Used to generate appropriate API error messages, so
                       ;; they'll be displayed on the right part of the screen
