@@ -10,7 +10,7 @@ an exception is thrown, telling a user they must wait some period of time before
 
 ### Example
 
-Let's consider the email throttling done by POST /api/session.
+Let's consider a login endpoint called `POST /api/session` that wants to throttle logins by email address.
 The basic concept here is to keep a list of failed logins over the last hour. This list looks like:
 
 ```clojure
