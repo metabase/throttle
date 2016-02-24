@@ -55,11 +55,11 @@ The following are options that can be passed to `make-throttler`:
 *  `exception-field-key`
     Keyword name of the API field/value being checked. Used to generate appropriate error messages.
 *  `attempt-ttl-ms`
-    Amount of time to keep an entry under consideration for throttling.
+    Amount of time to keep an entry under consideration for throttling. (default: one hour)
 *  `attempts-threshold`
-    Number of attempts allowed with a given key before throttling is applied.
+    Number of attempts allowed with a given key before throttling is applied. (default: `10`)
 *  `initial-delay-ms`
-    Once throttling is in effect, initial delay before allowing another attempt. This grows according to `delay-exponent`.
+    Once throttling is in effect, initial delay before allowing another attempt. This grows according to `delay-exponent`. (default: 15 seconds)
 *  `delay-exponent`
     For each subsequent failure past `attempts-threshold`, increase the delay to
 
@@ -68,7 +68,7 @@ The following are options that can be passed to `make-throttler`:
     ```
 
     e.g. if `initial-delay-ms` is `15` and `delay-exponent` is `2`, the first attempt past `attempts-threshold` will require the user to wait 15 seconds
-    `(15 * 1^2)`, the next attempt after that 60 seconds `(15 * 2^2)`, then 135, and so on.
+    `(15 * 1^2)`, the next attempt after that 60 seconds `(15 * 2^2)`, then 135, and so on. (default: `1.5`)
 
 ### LICENSE
 
