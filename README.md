@@ -9,7 +9,7 @@ an exception is thrown, telling a user they must wait some period of time before
 
 ### Example
 
-Let's consider a login endpoint called `POST /api/session` that wants to throttle logins by email address.
+Let's consider a login endpoint called `POST /api/session` that makes sure a naughty hacker doesn't brute-force the password for some email address :speak_no_evil:.
 The basic concept here is to keep a list of logins attempts over the last hour. This list looks like:
 
 ```clojure
