@@ -20,7 +20,7 @@ The basic concept here is to keep a list of failed logins over the last hour. Th
  ["cam@metabase.com" 1438045258204])
 ```
 
-Every time there's a login attempt, push a new pair of [email timestamp (milliseconds)] to the front of the list.
+Every time there's a login attempt, push a new pair of `[email timestamp (milliseconds)]` to the front of the list.
 The list is thus automatically ordered by date, and we can drop the portion of the list with logins that are over
 an hour old as needed.
 
