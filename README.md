@@ -61,7 +61,12 @@ The following are options that can be passed to `make-throttler`:
 *  `initial-delay-ms`
     Once throttling is in effect, initial delay before allowing another attempt. This grows according to `delay-exponent`.
 *  `delay-exponent`
-    For each subsequent failure past `attempts-threshold`, increase the delay to `initial-delay-ms` `(num-attempts-over-theshold ^ delay-exponent)`.
+    For each subsequent failure past `attempts-threshold`, increase the delay to
+
+    ```
+    initial-delay-ms * (num-attempts-over-theshold ^ delay-exponent)
+    ```
+
     e.g. if `initial-delay-ms` is `15` and `delay-exponent` is `2`, the first attempt past `attempts-threshold` will require the user to wait 15 seconds
     `(15 * 1^2)`, the next attempt after that 60 seconds `(15 * 2^2)`, then 135, and so on.
 
