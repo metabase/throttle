@@ -4,8 +4,7 @@
 
 [![Dependencies Status](http://jarkeeper.com/metabase/throttle/status.png)](http://jarkeeper.com/metabase/throttle) [![Circle CI](https://circleci.com/gh/metabase/throttle.svg?style=svg)](https://circleci.com/gh/metabase/throttle)
 
-A `Throttler` is a simple object used for throttling API endpoints or other code pathways. It keeps track of all calls to an API endpoint
-with some value over some past period of time. If the number of calls with this value exceeds some threshold,
+A `Throttler` is a simple object used for throttling API endpoints or other code pathways. It keeps track of all calls with some value over some past period of time. If the number of calls with this value exceeds some threshold,
 an exception is thrown, telling a user they must wait some period of time before trying again.
 
 ### Example
