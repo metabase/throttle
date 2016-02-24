@@ -53,7 +53,7 @@ Then call `check` within the body of an endpoint with some value to apply thrott
 The following are options that can be passed to `make-throttler`:
 
 *  `exception-field-key`
-    Keyword Name of the API field/value being checked. Used to generate appropriate error messages
+    Keyword name of the API field/value being checked. Used to generate appropriate error messages.
 *  `attempt-ttl-ms`
     Amount of time to keep an entry under consideration for throttling.
 *  `attempts-threshold`
