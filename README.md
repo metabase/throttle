@@ -69,4 +69,4 @@ The following are options that can be passed to `make-throttler`:
 
 ### LICENSE
 
-[LGPL](https://www.gnu.org/licenses/lgpl.txt)
+[3-clause BSD](https://raw.githubusercontent.com/metabase/throttle/master/LICENSE.txt)
