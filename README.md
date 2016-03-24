@@ -2,7 +2,9 @@
 
 [![Clojars Project](https://clojars.org/metabase/throttle/latest-version.svg)](http://clojars.org/metabase/throttle)
 
-[![Dependencies Status](http://jarkeeper.com/metabase/throttle/status.png)](http://jarkeeper.com/metabase/throttle) [![Circle CI](https://circleci.com/gh/metabase/throttle.svg?style=svg)](https://circleci.com/gh/metabase/throttle)
+[![Dependencies Status](http://jarkeeper.com/metabase/throttle/status.png)](http://jarkeeper.com/metabase/throttle)
+[![Circle CI](https://circleci.com/gh/metabase/throttle.svg?style=svg)](https://circleci.com/gh/metabase/throttle)
+[![GitHub license](https://img.shields.io/badge/license-3%E2%80%92Clause%20BSD-blue.svg)](https://raw.githubusercontent.com/metabase/throttle/master/LICENSE.txt)
 
 A `Throttler` is a simple object used for throttling API endpoints or other code pathways. It keeps track of all calls with some value over some past period of time. If the number of calls with this value exceeds some threshold,
 an exception is thrown, telling a user they must wait some period of time before trying again.
