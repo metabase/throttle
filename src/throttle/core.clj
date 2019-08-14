@@ -95,7 +95,10 @@
 
 (defmacro with-throttling {:style/indent 2}
   [throttler keyy & body]
-  "`check` the given KEYY on THROTTLER, in an implicit `do`."
+  "Do BODY if attempts for KEYY on THROTTLER has not been exceeded.
+  If BODY fails (throws an exception), an failed attempt is counted and the exception is re-thrown. If failed attempts
+  threshold was exceeded, an exception is thrown. Attempts made while the threshold is exceeded, are counted as failed
+  attempts."
   `(do-with-throttling ~throttler ~keyy (fn [] ~@body)))
 
 ;;; # INTERNAL IMPLEMENTATION
