@@ -114,3 +114,66 @@
    (do (Thread/sleep 25)
        (attempt 1)
        (count @(:attempts test-throttler)))])
+
+
+;;; # tests for with-thottling
+
+;; Check that no attempts are recorded for empty throttled body
+(expect
+  0
+  (do
+    (reset! (:attempts test-throttler) '())
+    (throttle/with-throttling test-throttler :test)
+    (count @(:attempts test-throttler))))
+
+(let [threshold            (:attempts-threshold test-throttler)
+      max-allowed-failures (dec threshold)
+      login-failed         (fn [] (throw (Exception. "Login failed.")))
+      login-success        (fn [] nil) ; does not throw an exception
+      throttled-fail       (fn [] (try
+                                    (throttle/with-throttling test-throttler :test
+                                      (login-failed))
+                                    (catch Throwable _)))]
+  ;; Failed throttled attempts are recorded, and non-failing attempt succeeds while under threshold
+  (expect
+    max-allowed-failures
+    (do
+      (reset! (:attempts test-throttler) '())
+      (dotimes [_ max-allowed-failures]
+        (try
+          (throttle/with-throttling test-throttler :test
+            (login-failed))
+          (catch Throwable _)))
+      (throttle/with-throttling test-throttler :test
+        (login-success)) ; successful login
+      (count @(:attempts test-throttler))))
+
+  ;; Check that first throttled attempt fails, after threshold has been reached
+  (expect
+    threshold
+    (let []
+      (do
+        (reset! (:attempts test-throttler) '())
+        (dotimes [_ threshold]
+          (try
+            (throttle/with-throttling test-throttler :test
+              (login-failed))
+            (catch Throwable _)))
+        (count @(:attempts test-throttler)))))
+
+  ;; Check that throttled attempt is allowed after old attempt expired
+  (expect
+    (inc threshold)
+    (do
+      (reset! (:attempts test-throttler) '())
+      (throttled-fail) ; First failed attempt.
+      (Thread/sleep 15)
+      (dotimes [_ (dec threshold)] ; Use up all remaining allowed attempts.
+        (throttled-fail))
+      ; At this point were at `threshold` attempts already.
+      (throttled-fail)
+      ; Now we're at `threshold`+1 attempts.
+      (Thread/sleep 15)
+      ; The first attempt (before the `dotimes`) should have expired by now, so we're back to `threshold` attempts.
+      (throttled-fail) ; Add another attempt to allow `remove-old-attempts` to be triggered. Back to `threshold`+ 1.
+      (count @(:attempts test-throttler)))))

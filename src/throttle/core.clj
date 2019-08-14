@@ -61,6 +61,42 @@
                                :errors      {exception-field-key message}}))))
   (swap! attempts conj [keyy (System/currentTimeMillis)]))
 
+(defn- remaining-attempts
+  [^Throttler {:keys [attempts attempts-threshold]} keyy]
+  (let [[[_ most-recent-attempt-ms], :as keyy-attempts] (filter (fn [[k _]] (= k keyy)) @attempts)]
+    (if most-recent-attempt-ms
+      (let [num-recent-attempts (count keyy-attempts)]
+        (- attempts-threshold num-recent-attempts))
+      attempts-threshold)))
+
+(defn- make-throttling-ex
+  [{:keys [exception-field-key] :as throttler} keyy]
+  (let [delay-ms (calculate-delay throttler keyy)
+        message  (if delay-ms
+                   (format "Too many attempts! You must wait %d seconds before trying again."
+                           (int (math/round (/ delay-ms 1000))))
+                   "Too many attempts! Please try again later.")]
+    (ex-info message {:errors {exception-field-key message}})))
+
+(defn- add-attempt!
+  [^Throttler {:keys [attempts]} keyy]
+  (swap! attempts conj [keyy (System/currentTimeMillis)]))
+
+(defn do-with-throttling
+  [^Throttler throttler keyy f]
+  (remove-old-attempts throttler)
+  (try
+    (when (<= (remaining-attempts throttler keyy) 0)
+      (throw (make-throttling-ex throttler keyy)))
+    (f)
+    (catch Throwable e
+      (add-attempt! throttler keyy)
+      (throw e))))
+
+(defmacro with-throttling {:style/indent 2}
+  [throttler keyy & body]
+  "`check` the given KEYY on THROTTLER, in an implicit `do`."
+  `(do-with-throttling ~throttler ~keyy (fn [] ~@body)))
 
 ;;; # INTERNAL IMPLEMENTATION
 
