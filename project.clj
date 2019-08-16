@@ -1,4 +1,4 @@
-(defproject metabase/throttle "1.0.1"
+(defproject metabase/throttle "1.0.2"
   :description "Simple tools for throttling API endpoints and other code."
   :url "https://github.com/metabase/throttle"
   :min-lein-version "2.5.0"
