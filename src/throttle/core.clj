@@ -12,16 +12,16 @@
                       ;; [Internal] List of attempt entries. These are pairs of [key timestamp (ms)],
                       ;; e.g. ["cam@metabase.com" 1438045261132]
                       ^Atom    attempts
-                      ;; Amount of time to keep an entry in ATTEMPTS before dropping it.
+                      ;; Amount of time to keep an entry in `attempts` before dropping it.
                       ^Integer attempt-ttl-ms
                       ;; Number of attempts allowed with a given key before throttling is applied.
                       ^Integer attempts-threshold
                       ;; Once throttling is in effect, initial delay before allowing another attempt. This grows
-                      ;; according to DELAY-EXPONENT.
+                      ;; according to `delay-exponent`.
                       ^Integer initial-delay-ms
-                      ;; For each subsequent failure past ATTEMPTS-THRESHOLD, increase the delay to
-                      ;; INITIAL-DELAY-MS * (num-attempts-over-theshold ^ DELAY-EXPONENT). e.g. if INITIAL-DELAY-MS is
-                      ;; 15 and DELAY-EXPONENT is 2, the first attempt past ATTEMPTS-THRESHOLD will require the user to
+                      ;; For each subsequent failure past `attempts-threshold`, increase the delay to `initial-delay-ms
+                      ;; * (num-attempts-over-theshold ^ delay-exponent)`. e.g. if `initial-delay-ms` is 15 and
+                      ;; `delay-exponent` is 2, the first attempt past `attempts-threshold` will require the user to
                       ;; wait 15 seconds (15 * 1^2), the next attempt after that 60 seconds (15 * 2^2), then 135, and so
                       ;; on.
                       ^Integer delay-exponent])
@@ -46,8 +46,8 @@
                                                     :exception-field-key exception-field-key})))
 
 (defn check
-  "Throttle an API call based on values of KEYY. Each call to this function will record KEYY to THROTTLER's internal
-  list; if the number of entires containing KEYY exceed THROTTLER's thresholds, throw an exception.
+  "Throttle an API call based on values of `keyy`. Each call to this function will record `keyy` to `throttler`'s
+  internal list; if the number of entires containing `keyy` exceed `throttler`'s thresholds, throw an exception.
 
      (defendpoint POST [:as {{:keys [email]} :body}]
        (throttle/check email-throttler email)
@@ -96,9 +96,9 @@
       (throw e))))
 
 (defmacro with-throttling
-  "Do BODY if failed attempts for KEYY on THROTTLER has not been exceeded.
-  If BODY throws an exception, a failed attempt is counted and the exception is re-thrown. If the failed attempts
-  threshold is exceeded, an exception is thrown and BODY is not executed. Attempts made while the threshold is
+  "Do `body` if failed attempts for `keyy` on `throttler` has not been exceeded.
+  If `body` throws an exception, a failed attempt is counted and the exception is re-thrown. If the failed attempts
+  threshold is exceeded, an exception is thrown and `body` is not executed. Attempts made while the threshold is
   exceeded are counted as additional failed attempts."
   {:style/indent 2}
   [throttler keyy & body]
@@ -107,7 +107,7 @@
 ;;; # INTERNAL IMPLEMENTATION
 
 (defn- remove-old-attempts
-  "Remove THROTTLER entires past the TTL."
+  "Remove `throttler` entires past the TTL."
   [^Throttler {:keys [attempts attempt-ttl-ms]}]
   (let [old-attempt-cutoff (- (System/currentTimeMillis) attempt-ttl-ms)
         non-old-attempt?   (fn [[_ timestamp]]
@@ -115,7 +115,7 @@
     (reset! attempts (take-while non-old-attempt? @attempts))))
 
 (defn- calculate-delay
-  "Calculate the delay in milliseconds, if any, that should be applied to a given THROTTLER / KEYY combination."
+  "Calculate the delay in milliseconds, if any, that should be applied to a given `throttler`/`keyy` combination."
   ([^Throttler throttler keyy]
    (calculate-delay throttler keyy (System/currentTimeMillis)))
 
