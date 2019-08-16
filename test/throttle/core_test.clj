@@ -170,10 +170,10 @@
       (Thread/sleep 15)
       (dotimes [_ (dec threshold)] ; Use up all remaining allowed attempts.
         (throttled-fail))
-      ; At this point were at `threshold` attempts already.
+      ;; At this point were at `threshold` attempts already.
       (throttled-fail)
-      ; Now we're at `threshold`+1 attempts.
+      ;; Now we're at `threshold`+1 attempts.
       (Thread/sleep 15)
-      ; The first attempt (before the `dotimes`) should have expired by now, so we're back to `threshold` attempts.
+      ;; The first attempt (before the `dotimes`) should have expired by now, so we're back to `threshold` attempts.
       (throttled-fail) ; Add another attempt to allow `remove-old-attempts` to be triggered. Back to `threshold`+ 1.
       (count @(:attempts test-throttler)))))
