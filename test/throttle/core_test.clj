@@ -120,14 +120,14 @@
        (count @(:attempts test-throttler)))])
 
 
-;;; # tests for with-thottling
+;;; # tests for with-throttling
 
 ;; Check that no attempts are recorded for empty throttled body
 (expect
   0
   (do
     (reset! (:attempts test-throttler) '())
-    (throttle/with-throttling test-throttler :test)
+    (throttle/with-throttling [test-throttler :test])
     (count @(:attempts test-throttler))))
 
 (defn- login-failed [] (throw (Exception. "Login failed.")))
@@ -136,7 +136,7 @@
 
 (defn- throttled-login-failure [throttler]
   (try
-    (throttle/with-throttling throttler :test
+    (throttle/with-throttling [throttler :test]
       (login-failed))
     (catch Throwable _)))
 
@@ -148,10 +148,10 @@
       (reset! (:attempts test-throttler) '())
       (dotimes [_ max-allowed-failures]
         (try
-          (throttle/with-throttling test-throttler :test
+          (throttle/with-throttling [test-throttler :test]
             (login-failed))
           (catch Throwable _)))
-      (throttle/with-throttling test-throttler :test
+      (throttle/with-throttling [test-throttler :test]
         (login-success)) ; successful login
       (count @(:attempts test-throttler)))))
 
@@ -163,7 +163,7 @@
       (reset! (:attempts test-throttler) '())
       (dotimes [_ (:attempts-threshold test-throttler)]
         (try
-          (throttle/with-throttling test-throttler :test
+          (throttle/with-throttling [test-throttler :test]
             (login-failed))
           (catch Throwable _)))
       (count @(:attempts test-throttler)))))
@@ -186,3 +186,23 @@
     (throttled-login-failure test-throttler)
     ;; Added another attempt to allow `remove-old-attempts` to be triggered. Back to `threshold`+ 1 attempts.
     (count @(:attempts test-throttler))))
+
+;; Test with multiple throttlers
+(expect
+  [2 3 2 1]
+  (let [first-throttler  (throttle/make-throttler :first,  :attempts-threshold 3)
+        second-throttler (throttle/make-throttler :second, :attempts-threshold 5)]
+    (dotimes [_ 2]
+      (try
+        (throttle/with-throttling [first-throttler  :a
+                                   second-throttler :b]
+          (login-failed))
+        (catch Throwable _)))
+    (try
+      (throttle/with-throttling [second-throttler :c]
+        (login-failed))
+      (catch Throwable _))
+    [(count @(:attempts first-throttler))
+     (count @(:attempts second-throttler))
+     (count (filter #(= (first %) :b) @(:attempts second-throttler)))
+     (count (filter #(= (first %) :c) @(:attempts second-throttler)))]))

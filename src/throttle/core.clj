@@ -101,8 +101,12 @@
   threshold is exceeded, an exception is thrown and `body` is not executed. Attempts made while the threshold is
   exceeded are counted as additional failed attempts."
   {:style/indent 2}
-  [throttler keyy & body]
-  `(do-with-throttling ~throttler ~keyy (fn [] ~@body)))
+  [[throttler key & more] & body]
+  (if (seq more)
+    `(with-throttling [~throttler ~key]
+       (with-throttling [~@more]
+         ~@body))
+    `(do-with-throttling ~throttler ~key (fn [] ~@body))))
 
 ;;; # INTERNAL IMPLEMENTATION
 
