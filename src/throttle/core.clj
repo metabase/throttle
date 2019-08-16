@@ -20,9 +20,10 @@
                       ;; according to DELAY-EXPONENT.
                       ^Integer initial-delay-ms
                       ;; For each subsequent failure past ATTEMPTS-THRESHOLD, increase the delay to
-                      ;; INITIAL-DELAY-MS * (num-attempts-over-theshold ^ DELAY-EXPONENT). e.g. if INITIAL-DELAY-MS is 15
-                      ;; and DELAY-EXPONENT is 2, the first attempt past ATTEMPTS-THRESHOLD will require the user to wait
-                      ;; 15 seconds (15 * 1^2), the next attempt after that 60 seconds (15 * 2^2), then 135, and so on.
+                      ;; INITIAL-DELAY-MS * (num-attempts-over-theshold ^ DELAY-EXPONENT). e.g. if INITIAL-DELAY-MS is
+                      ;; 15 and DELAY-EXPONENT is 2, the first attempt past ATTEMPTS-THRESHOLD will require the user to
+                      ;; wait 15 seconds (15 * 1^2), the next attempt after that 60 seconds (15 * 2^2), then 135, and so
+                      ;; on.
                       ^Integer delay-exponent])
 
 ;; These are made private because you should use `make-throttler` instead.
@@ -45,13 +46,14 @@
                                                     :exception-field-key exception-field-key})))
 
 (defn check
-  "Throttle an API call based on values of KEYY. Each call to this function will record KEYY to THROTTLER's internal list;
-   if the number of entires containing KEYY exceed THROTTLER's thresholds, throw an exception.
+  "Throttle an API call based on values of KEYY. Each call to this function will record KEYY to THROTTLER's internal
+  list; if the number of entires containing KEYY exceed THROTTLER's thresholds, throw an exception.
 
      (defendpoint POST [:as {{:keys [email]} :body}]
        (throttle/check email-throttler email)
        ...)"
-  [^Throttler {:keys [attempts exception-field-key], :as throttler} keyy] ; technically, keyy can be nil so you can record *all* attempts
+  ;; Technically, `keyy` can be nil so you can record *all* attempts.
+  [^Throttler {:keys [attempts exception-field-key], :as throttler} keyy]
   {:pre [(= (type throttler) Throttler)]}
   (remove-old-attempts throttler)
   (when-let [delay-ms (calculate-delay throttler keyy)]
@@ -93,12 +95,13 @@
       (add-attempt! throttler keyy)
       (throw e))))
 
-(defmacro with-throttling {:style/indent 2}
-  [throttler keyy & body]
+(defmacro with-throttling
   "Do BODY if failed attempts for KEYY on THROTTLER has not been exceeded.
   If BODY throws an exception, a failed attempt is counted and the exception is re-thrown. If the failed attempts
   threshold is exceeded, an exception is thrown and BODY is not executed. Attempts made while the threshold is
   exceeded are counted as additional failed attempts."
+  {:style/indent 2}
+  [throttler keyy & body]
   `(do-with-throttling ~throttler ~keyy (fn [] ~@body)))
 
 ;;; # INTERNAL IMPLEMENTATION
@@ -120,7 +123,8 @@
    (let [[[_ most-recent-attempt-ms], :as keyy-attempts] (filter (fn [[k _]] (= k keyy)) @attempts)]
      (when most-recent-attempt-ms
        (let [num-recent-attempts         (count keyy-attempts)
-             num-attempts-over-threshold (- (inc num-recent-attempts) attempts-threshold)] ; add one to the sum to account for the current attempt
+             ;; Add one to the sum to account for the current attempt:
+             num-attempts-over-threshold (- (inc num-recent-attempts) attempts-threshold)]
          (when (> num-attempts-over-threshold 0)
            (let [delay-ms              (* (math/expt num-attempts-over-threshold delay-exponent)
                                           initial-delay-ms)

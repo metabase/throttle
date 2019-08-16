@@ -2,7 +2,11 @@
   (:require [expectations :refer :all]
             [throttle.core :as throttle]))
 
-(def ^:private test-throttler (throttle/make-throttler :test, :initial-delay-ms 5, :attempts-threshold 3, :delay-exponent 2, :attempt-ttl-ms 25))
+(def ^:private test-throttler (throttle/make-throttler :test,
+                                                       :initial-delay-ms 5,
+                                                       :attempts-threshold 3,
+                                                       :delay-exponent 2,
+                                                       :attempt-ttl-ms 25))
 
 ;;; # tests for calculate-delay
 (def calculate-delay @(resolve 'throttle.core/calculate-delay))
