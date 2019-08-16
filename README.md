@@ -49,6 +49,18 @@ Then call `check` at the appropriate point in your code with some value to apply
   ...)
 ```
 
+If you only want to throttle failures of some operation, like login attempts, you can use `with-throttling`.
+
+```clojure
+(defn my-login-fn [username password]
+  (throttle/with-throttling [login-throttler username]
+    (login username password)))
+```
+
+In the above case throttling will only kick in after `login` threw an exception `attempts-threshold` times.
+
+`with-throttling` accepts multiple throttler-key pairs.
+
 ### Configuration
 
 The following are options that can be passed to `make-throttler`:

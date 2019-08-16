@@ -1,0 +1,153 @@
+version: 2.1
+
+########################################################################################################################
+#                                                      EXECUTORS                                                       #
+########################################################################################################################
+
+executors:
+  default:
+    working_directory: /home/circleci/metabase/throttle/
+    docker:
+      - image: circleci/clojure:lein-2.8.1
+
+  java-11:
+    working_directory: /home/circleci/metabase/throttle/
+    docker:
+      - image: circleci/clojure:openjdk-11-lein-2.8.1
+
+
+########################################################################################################################
+#                                                       COMMANDS                                                       #
+########################################################################################################################
+
+commands:
+
+  attach-workspace:
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+
+  restore-be-deps-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - be-deps-{{ checksum "project.clj" }}
+            - be-deps-
+
+jobs:
+
+  checkout:
+    executor: default
+    steps:
+      - restore_cache:
+          keys:
+            - source-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Branch }}
+            - source-
+      - checkout
+      - save_cache:
+          key: source-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .git
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - metabase/throttle
+
+  be-deps:
+    executor: default
+    steps:
+      - attach-workspace
+      - restore-be-deps-cache
+      - run: lein deps
+      - save_cache:
+          key: be-deps-{{ checksum "project.clj" }}
+          paths:
+            - /home/circleci/.m2
+
+  lein:
+    parameters:
+      e:
+        type: executor
+        default: default
+      lein-command:
+        type: string
+    executor: << parameters.e >>
+    steps:
+      - attach-workspace
+      - restore-be-deps-cache
+      - run:
+          command: lein << parameters.lein-command >>
+          no_output_timeout: 5m
+
+  deploy:
+    executor: default
+    steps:
+      - attach-workspace
+      - run:
+          name: Deploy to clojars
+          command: lein deploy clojars
+
+
+########################################################################################################################
+#                                                      WORKFLOWS                                                       #
+########################################################################################################################
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - checkout
+
+      - be-deps:
+          requires:
+            - checkout
+
+      - lein:
+          name: be-tests
+          requires:
+            - be-deps
+          lein-command: test
+
+      - lein:
+          name: be-tests-java-11
+          requires:
+            - be-deps
+          e: java-11
+          lein-command: test
+
+      - lein:
+          name: be-linter-eastwood
+          requires:
+            - be-deps
+          lein-command: eastwood
+
+      - lein:
+          name: be-linter-docstring-checker
+          requires:
+            - be-deps
+          lein-command: docstring-checker
+
+      - lein:
+          name: be-linter-namespace-decls
+          requires:
+            - be-deps
+          lein-command: check-namespace-decls
+
+      - lein:
+          name: be-linter-bikeshed
+          requires:
+            - be-deps
+          lein-command: bikeshed
+
+      - deploy:
+          requires:
+            - be-linter-bikeshed
+            - be-linter-docstring-checker
+            - be-linter-eastwood
+            - be-linter-namespace-decls
+            - be-tests
+            - be-tests-java-11
+          filters:
+            branches:
+              only: master
