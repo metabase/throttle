@@ -228,3 +228,18 @@
      (count @(:attempts second-throttler))
      (count (filter #(= (first %) :b) @(:attempts second-throttler)))
      (count (filter #(= (first %) :c) @(:attempts second-throttler)))]))
+
+;; Check that attempts running at the same time all count against the threshold
+(expect
+  {:failed 3, :throttled 7}
+  (let [test-throttler (make-test-throttler)
+        running        (java.util.concurrent.CountDownLatch. 3)
+        attempt        (fn []
+                         (try
+                           (throttle/with-throttling [test-throttler :test]
+                             (.countDown running)
+                             (.await running)
+                             (login-failed))
+                           (catch clojure.lang.ExceptionInfo _ :throttled)
+                           (catch Exception _ :failed)))]
+    (frequencies (mapv deref (doall (repeatedly 10 #(future (attempt))))))))

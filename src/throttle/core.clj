@@ -80,20 +80,17 @@
                    "Too many attempts! Please try again later.")]
     (ex-info message {:errors {exception-field-key message}})))
 
-(defn- add-attempt!
-  [^Throttler {:keys [attempts]} keyy]
-  (swap! attempts conj [keyy (System/currentTimeMillis)]))
-
 (defn do-with-throttling
-  [^Throttler throttler keyy f]
+  [^Throttler {:keys [attempts], :as throttler} keyy f]
   (remove-old-attempts throttler)
-  (try
-    (when (<= (remaining-attempts throttler keyy) 0)
-      (throw (make-throttling-ex throttler keyy)))
-    (f)
-    (catch Throwable e
-      (add-attempt! throttler keyy)
-      (throw e))))
+  (let [attempt  [keyy (System/currentTimeMillis)]
+        [before] (swap-vals! attempts conj attempt)
+        earlier  (assoc throttler :attempts (atom before))]
+    (when (<= (remaining-attempts earlier keyy) 0)
+      (throw (make-throttling-ex earlier keyy)))
+    (let [result (f)]
+      (swap! attempts (fn [current] (doall (remove #(identical? % attempt) current))))
+      result)))
 
 (defmacro with-throttling
   "Do `body` if failed attempts for `keyy` on `throttler` has not been exceeded.
@@ -116,7 +113,7 @@
   (let [old-attempt-cutoff (- (System/currentTimeMillis) attempt-ttl-ms)
         non-old-attempt?   (fn [[_ timestamp]]
                              (> timestamp old-attempt-cutoff))]
-    (reset! attempts (take-while non-old-attempt? @attempts))))
+    (swap! attempts #(doall (take-while non-old-attempt? %)))))
 
 (defn- calculate-delay
   "Calculate the delay in milliseconds, if any, that should be applied to a given `throttler`/`keyy` combination."
