@@ -1,4 +1,4 @@
-(defproject metabase/throttle "1.0.2"
+(defproject metabase/throttle "1.0.3"
   :description "Simple tools for throttling API endpoints and other code."
   :url "https://github.com/metabase/throttle"
   :min-lein-version "2.5.0"
@@ -22,7 +22,7 @@
   :profiles
   {:dev
    {:dependencies
-    [[org.clojure/clojure "1.8.0"]
+    [[org.clojure/clojure "1.12.3"]
      [expectations "2.1.4"]]
 
     :injections
