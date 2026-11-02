@@ -9,8 +9,8 @@
 (defrecord Throttler [;; Name of the API field/value being checked. Used to generate appropriate API error messages, so
                       ;; they'll be displayed on the right part of the screen
                       ^Keyword exception-field-key
-                      ;; [Internal] List of attempt entries. These are pairs of [key timestamp (ms)], with timestamps taken
-                      ;; from the monotonic clock, e.g. ["cam@metabase.com" 1438045261132]
+                      ;; [Internal] List of attempt entries. These are pairs of [key timestamp (ms)], with timestamps
+                      ;; taken from the monotonic clock, e.g. ["cam@metabase.com" 1438045261132]
                       ^Atom    attempts
                       ;; Amount of time to keep an entry in `attempts` before dropping it.
                       ^Integer attempt-ttl-ms
