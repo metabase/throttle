@@ -243,3 +243,41 @@
                            (catch clojure.lang.ExceptionInfo _ :throttled)
                            (catch Exception _ :failed)))]
     (frequencies (mapv deref (doall (repeatedly 10 #(future (attempt))))))))
+
+;; Successful calls release capacity without removing a concurrent failure
+(expect
+  [[:ok :ok] 1 :failed 1]
+  (let [test-throttler (throttle/make-throttler :test :attempts-threshold 2)
+        entered        (java.util.concurrent.CountDownLatch. 1)
+        release        (java.util.concurrent.CountDownLatch. 1)
+        pending        (future
+                         (try
+                           (throttle/with-throttling [test-throttler :test]
+                             (.countDown entered)
+                             (assert (.await release 5 java.util.concurrent.TimeUnit/SECONDS))
+                             (login-failed))
+                           (catch Exception _ :failed)))]
+    (try
+      (assert (.await entered 5 java.util.concurrent.TimeUnit/SECONDS))
+      (let [results       (mapv (fn [_]
+                                  (throttle/with-throttling [test-throttler :test] :ok))
+                                (range 2))
+            attempt-count (count @(:attempts test-throttler))]
+        (.countDown release)
+        [results
+         attempt-count
+         (deref pending 5000 ::timeout)
+         (count @(:attempts test-throttler))])
+      (finally
+        (.countDown release)
+        (future-cancel pending)))))
+
+;; Equal keys and timestamps do not make two attempts the same attempt
+(expect
+  1
+  (let [test-throttler (throttle/make-throttler :test :attempts-threshold 2)]
+    (throttle/with-throttling [test-throttler :test]
+      (swap! (:attempts test-throttler)
+             (fn [attempts]
+               (conj attempts (mapv identity (first attempts))))))
+    (count @(:attempts test-throttler))))
