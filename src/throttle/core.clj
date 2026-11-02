@@ -4,13 +4,13 @@
 
 ;;; # PUBLIC INTERFACE
 
-(declare calculate-delay remove-old-attempts)
+(declare calculate-delay now-ms remove-old-attempts)
 
 (defrecord Throttler [;; Name of the API field/value being checked. Used to generate appropriate API error messages, so
                       ;; they'll be displayed on the right part of the screen
                       ^Keyword exception-field-key
-                      ;; [Internal] List of attempt entries. These are pairs of [key timestamp (ms)],
-                      ;; e.g. ["cam@metabase.com" 1438045261132]
+                      ;; [Internal] List of attempt entries. These are pairs of [key timestamp (ms)], with timestamps taken
+                      ;; from the monotonic clock, e.g. ["cam@metabase.com" 1438045261132]
                       ^Atom    attempts
                       ;; Amount of time to keep an entry in `attempts` before dropping it.
                       ^Integer attempt-ttl-ms
@@ -61,7 +61,7 @@
                           (int (math/round (/ delay-ms 1000))))]
       (throw (ex-info message {:status-code 400
                                :errors      {exception-field-key message}}))))
-  (swap! attempts conj [keyy (System/currentTimeMillis)]))
+  (swap! attempts conj [keyy (now-ms)]))
 
 (defn- remaining-attempts
   [^Throttler {:keys [attempts attempts-threshold]} keyy]
@@ -83,7 +83,7 @@
 (defn do-with-throttling
   [^Throttler {:keys [attempts], :as throttler} keyy f]
   (remove-old-attempts throttler)
-  (let [attempt  [keyy (System/currentTimeMillis)]
+  (let [attempt  [keyy (now-ms)]
         [before] (swap-vals! attempts conj attempt)
         earlier  (assoc throttler :attempts (atom before))]
     (when (<= (remaining-attempts earlier keyy) 0)
@@ -107,10 +107,15 @@
 
 ;;; # INTERNAL IMPLEMENTATION
 
+(defn- now-ms
+  "Return the current monotonic clock reading in milliseconds, so wall-clock changes do not affect throttling."
+  []
+  (quot (System/nanoTime) 1000000))
+
 (defn- remove-old-attempts
   "Remove `throttler` entires past the TTL."
   [^Throttler {:keys [attempts attempt-ttl-ms]}]
-  (let [old-attempt-cutoff (- (System/currentTimeMillis) attempt-ttl-ms)
+  (let [old-attempt-cutoff (- (now-ms) attempt-ttl-ms)
         non-old-attempt?   (fn [[_ timestamp]]
                              (> timestamp old-attempt-cutoff))]
     (swap! attempts #(doall (take-while non-old-attempt? %)))))
@@ -118,7 +123,7 @@
 (defn- calculate-delay
   "Calculate the delay in milliseconds, if any, that should be applied to a given `throttler`/`keyy` combination."
   ([^Throttler throttler keyy]
-   (calculate-delay throttler keyy (System/currentTimeMillis)))
+   (calculate-delay throttler keyy (now-ms)))
 
   ([^Throttler {:keys [attempts initial-delay-ms attempts-threshold delay-exponent]} keyy current-time-ms]
    (let [[[_ most-recent-attempt-ms], :as keyy-attempts] (filter (fn [[k _]] (= k keyy)) @attempts)]
